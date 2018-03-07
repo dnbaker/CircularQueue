@@ -145,12 +145,10 @@ public:
     {
         assert((mask_ & (mask_ + 1)) == 0);
         if(data_ == nullptr) {
-            //LOG_EXIT("pointer is null after calling malloc with %zu bytes\n", size_t((mask_ + 1) * sizeof(T)));
             throw std::bad_alloc();
         }
     }
     void resize(size_type new_size) {
-        LOG_DEBUG("resizing from %zu to new_size %zu\n", size_t(mask_ + 1), size_t(new_size));
         if(__builtin_expect(new_size < mask_, 0)) throw std::runtime_error("Attempting to resize to value smaller than queue's size, either from user error or overflowing the size_type. Abort!");
         new_size = roundup(new_size);
         auto tmp = std::realloc(data_, new_size * sizeof(T));
@@ -159,7 +157,6 @@ public:
         if(start_ == stop_) {
             if(start_) {
                 stop_ = mask_ + 1;
-                LOG_DEBUG("Reallocating with %zu bytes of scratch\n",  stop_ * sizeof(T));
                 auto tmp = static_cast<T *>(std::malloc((stop_) * sizeof(T)));
                 if(tmp == nullptr) throw std::bad_alloc();
                 std::memcpy(tmp, data_ + start_, (stop_ - start_) * sizeof(T));
@@ -169,7 +166,6 @@ public:
                 start_ = 0;
             }
         } else if(stop_ < start_) {
-            LOG_DEBUG("Reallocating with %zu bytes of scratch bc stop < start\n", (mask_ + 1) * sizeof(T));
             auto tmp = static_cast<T *>(std::malloc((mask_ + 1) * sizeof(T)));
             if(tmp == nullptr) throw std::bad_alloc();
             std::memcpy(tmp, data_ + start_, ((mask_ + 1) - start_) * sizeof(T));
