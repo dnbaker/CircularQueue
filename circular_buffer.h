@@ -7,6 +7,7 @@
 #include <string>      // for std::string [for exception handling]
 #include <type_traits> // For std::enable_if_t/std::is_unsigned_v
 #include <cstring>     // For std::memcpy
+#include <vector>      // For converting to vector
 
 namespace circ {
 using std::size_t;
@@ -150,7 +151,7 @@ public:
     }
     void resize(size_type new_size) {
         if(__builtin_expect(new_size < mask_, 0)) throw std::runtime_error("Attempting to resize to value smaller than queue's size, either from user error or overflowing the size_type. Abort!");
-        new_size = roundup(new_size);
+        new_size = roundup(new_size); // Is this necessary? We can hide resize from the user and then cut out this call.
         auto tmp = std::realloc(data_, new_size * sizeof(T));
         if(tmp == nullptr) throw std::bad_alloc();
         data_ = static_cast<T *>(tmp);
@@ -181,11 +182,9 @@ public:
     // Does not yet implement push_front.
     template<typename... Args>
     T &push_back(Args &&... args) {
+        if(__builtin_expect(((stop_ + 1) & mask_) == start_, 0)) resize((mask_ + 1) << 1);
         size_type ind = stop_;
         ++stop_; stop_ &= mask_;
-        if(__builtin_expect(stop_ == start_, 0)) {
-            resize((mask_ + 1) << 1);
-        }
         return *(new(data_ + ind) T(std::forward<Args>(args)...));
     }
     template<typename... Args>
@@ -225,21 +224,22 @@ public:
     const T &front() const {
         return data_[start_];
     }
-    ~FastCircularQueue() {
-        if constexpr(std::is_destructible_v<T>) {
-            for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
-        }
-        std::free(data_);
-    }
+    ~FastCircularQueue() {clear();}
     size_type capacity() const noexcept {return mask_;}
     size_type size()     const noexcept {return (stop_ - start_) & mask_;}
+    std::vector<T> to_vector() const {
+        std::vector<T> ret;
+        ret.reserve(this->size());
+        for(size_type i(start_); i != stop_; ret.emplace_back(std::move(data_[i])), ++i, i &= mask_);
+        return ret;
+    }
     void clear() {
         if constexpr(std::is_destructible_v<T>) {
             for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
         }
+        std::free(data_);
         start_ = stop_ = 0;
     }
-
 }; // FastCircularQueue
 template<typename T, typename SizeType>
 using deque = FastCircularQueue<T, SizeType>;
