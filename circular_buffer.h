@@ -149,7 +149,25 @@ public:
             throw std::bad_alloc();
         }
     }
+    FastCircularQueue(FastCircularQueue &&other) {
+        if(&other == this) return;
+        std::memcpy(this, &other, sizeof(*this));
+        std::memset(&other, 0, sizeof(other));
+    }
+    FastCircularQueue(const FastCircularQueue &other) {
+        if(&other == this) return;
+        start_ = other.start_;
+        stop_  = other.stop_;
+        mask_  = other.mask_;
+        data_ = static_cast<T *>(std::malloc(sizeof(T) * (mask_ + 1)));
+        if(__builtin_expect(data_ == nullptr, 0)) throw std::bad_alloc();
+        for(size_type iter = other.start_; iter != other.stop_; ++iter) {
+            data_[iter] = other.data_[iter];
+        }
+    }
     void resize(size_type new_size) {
+        // TODO: this will cause a leak if the later malloc fails.
+        // Fix this by only copying the temporary buffer to data_ in case of success in all allocations.
         if(__builtin_expect(new_size < mask_, 0)) throw std::runtime_error("Attempting to resize to value smaller than queue's size, either from user error or overflowing the size_type. Abort!");
         new_size = roundup(new_size); // Is this necessary? We can hide resize from the user and then cut out this call.
         auto tmp = std::realloc(data_, new_size * sizeof(T));
