@@ -230,6 +230,10 @@ public:
         push(std::forward<Args>(args)...);
         return ret;
     }
+    template<typename... Args>
+    T &push(Args &&... args) {
+        return push_back(std::forward<Args>(args)...); // Interface compatibility
+    }
     T &back() {
         return data_[stop_ - 1];
     }
@@ -262,7 +266,7 @@ public:
         std::free(data_);
     }
 }; // FastCircularQueue
-template<typename T, typename SizeType>
+template<typename T, typename SizeType=std::size_t>
 using deque = FastCircularQueue<T, SizeType>;
 
 } // namespace circ
