@@ -16,20 +16,12 @@ using std::uint32_t;
 using std::uint16_t;
 using std::uint8_t;
 
-static inline uint64_t roundup(uint64_t x) {
-    --x, x|=x>>1, x|=x>>2, x|=x>>4, x|=x>>8, x|=x>>16, x|=x>>32;
-    return ++x;
-}
-static inline uint32_t roundup(uint32_t x) {
-    --x, x|=x>>1, x|=x>>2, x|=x>>4, x|=x>>8, x|=x>>16;
-    return ++x;
-}
-static inline uint16_t roundup(uint16_t x) {
-    --x, x|=x>>1, x|=x>>2, x|=x>>4, x|=x>>8;
-    return ++x;
-}
-static inline uint8_t roundup(uint8_t x) {
+template<typename T>
+static inline T roundup(T x) {
     --x, x|=x>>1, x|=x>>2, x|=x>>4;
+    if constexpr(sizeof(T) > 1) x|=x>>8;
+    if constexpr(sizeof(T) > 2) x|=x>>16;
+    if constexpr(sizeof(T) > 4) x|=x>>32;
     return ++x;
 }
 
