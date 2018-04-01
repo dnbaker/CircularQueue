@@ -151,11 +151,10 @@ public:
         start_ = other.start_;
         stop_  = other.stop_;
         mask_  = other.mask_;
-        data_ = static_cast<T *>(std::malloc(sizeof(T) * (mask_ + 1)));
-        if(__builtin_expect(data_ == nullptr, 0)) throw std::bad_alloc();
-        for(size_type iter = other.start_; iter != other.stop_; ++iter) {
-            data_[iter] = other.data_[iter];
-        }
+        auto tmp = static_cast<T *>(std::malloc(sizeof(T) * (mask_ + 1)));
+        if(__builtin_expect(tmp == nullptr, 0)) throw std::bad_alloc();
+        data_ = tmp;
+        for(auto i(other.start_); i != other.stop_; data_[i] = other.data_[i], ++i);
     }
     void resize(size_type new_size) {
         // TODO: this will cause a leak if the later malloc fails.
@@ -248,9 +247,8 @@ public:
         return ret;
     }
     void clear() {
-        if constexpr(std::is_destructible_v<T>) {
+        if constexpr(std::is_destructible_v<T>)
             for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
-        }
         start_ = stop_ = 0;
     }
     void free() {
