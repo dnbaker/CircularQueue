@@ -237,6 +237,10 @@ public:
     const T &front() const {
         return data_[start_];
     }
+    template<typename Functor>
+    void for_each(const Functor &func) {
+        for(SizeType i = start_; i != end_; func(data_[i++]), i &= mask_);
+    }
     ~FastCircularQueue() {this->free();}
     size_type capacity() const noexcept {return mask_;}
     size_type size()     const noexcept {return (stop_ - start_) & mask_;}
