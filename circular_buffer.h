@@ -52,6 +52,12 @@ public:
         const T &operator*() const noexcept {
             return ref_.data_[pos_];
         }
+        T *operator->() {
+            return &ref_.data_[pos_];
+        }
+        const T *operator->() const {
+            return &ref_.data_[pos_];
+        }
         iterator &operator++() noexcept {
             ++pos_;
             pos_ &= ref_.mask_;
@@ -156,6 +162,11 @@ public:
         data_ = tmp;
         for(auto i(other.start_); i != other.stop_; data_[i] = other.data_[i], ++i);
     }
+    auto start() const {return start_;}
+    auto stop() const {return stop_;}
+    auto mask() const {return mask_;}
+    const auto data() const {return data_;}
+    auto data()             {return data_;}
     void resize(size_type new_size) {
         // TODO: this will cause a leak if the later malloc fails.
         // Fix this by only copying the temporary buffer to data_ in case of success in all allocations.
@@ -191,13 +202,21 @@ public:
     // Does not yet implement push_front.
     template<typename... Args>
     T &push_back(Args &&... args) {
-        if(__builtin_expect(((stop_ + 1) & mask_) == start_, 0)) resize((mask_ + 1) << 1);
+        if(__builtin_expect(((stop_ + 1) & mask_) == start_, 0)) {
+#if !NDEBUG
+            std::fprintf(stderr, "Resizing to new size of %zu\n", (size_t(mask_ + 1) << 1));
+#endif
+            resize((mask_ + 1) << 1);
+        }
         size_type ind = stop_;
         ++stop_; stop_ &= mask_;
         return *(new(data_ + ind) T(std::forward<Args>(args)...));
     }
     template<typename... Args>
     T &emplace_back(Args &&... args) {
+#if !NDEBUG
+        std::fprintf(stderr, "Emplacing back %s\n", __PRETTY_FUNCTION__);
+#endif
         return push_back(std::forward<Args>(args)...); // Interface compatibility.
     }
     T pop() {
@@ -239,7 +258,7 @@ public:
     }
     template<typename Functor>
     void for_each(const Functor &func) {
-        for(SizeType i = start_; i != end_; func(data_[i++]), i &= mask_);
+        for(SizeType i = start_; i != stop_; func(data_[i++]), i &= mask_);
     }
     ~FastCircularQueue() {this->free();}
     size_type capacity() const noexcept {return mask_;}
