@@ -215,7 +215,7 @@ public:
     template<typename... Args>
     T &emplace_back(Args &&... args) {
 #if !NDEBUG
-        std::fprintf(stderr, "Emplacing back %s\n", __PRETTY_FUNCTION__);
+        //std::fprintf(stderr, "Emplacing back %s\n", __PRETTY_FUNCTION__);
 #endif
         return push_back(std::forward<Args>(args)...); // Interface compatibility.
     }
