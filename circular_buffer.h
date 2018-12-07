@@ -35,7 +35,7 @@ class FastCircularQueue {
     SizeType start_;
     SizeType  stop_;
     T        *data_;
-    static_assert(std::is_unsigned_v<SizeType>, "Must be unsigned");
+    static_assert(std::is_unsigned<SizeType>::value, "Must be unsigned");
 
 public:
     using size_type = SizeType;
@@ -270,7 +270,11 @@ public:
         return ret;
     }
     void clear() {
+#if __cplusplus < 201703L
+        if(std::is_destructible<T>::value)
+#else
         if constexpr(std::is_destructible_v<T>)
+#endif
             for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
         start_ = stop_ = 0;
     }
