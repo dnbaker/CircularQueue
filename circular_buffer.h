@@ -160,7 +160,7 @@ public:
         auto tmp = static_cast<T *>(std::malloc(sizeof(T) * (mask_ + 1)));
         if(__builtin_expect(tmp == nullptr, 0)) throw std::bad_alloc();
         data_ = tmp;
-        for(auto i(other.start_); i != other.stop_; data_[i] = other.data_[i], i = (i+1) & mask);
+        for(auto i(other.start_); i != other.stop_; data_[i] = other.data_[i], i = (i+1) & mask_);
     }
     auto start() const {return start_;}
     auto stop() const {return stop_;}
