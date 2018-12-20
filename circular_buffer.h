@@ -16,12 +16,18 @@ using std::uint32_t;
 using std::uint16_t;
 using std::uint8_t;
 
+#if __cplusplus >= 201703L
+#define CIRC_CONSTIF if constexpr
+#else
+#define CIRC_CONSTIF if
+#endif
+
 template<typename T>
 static inline T roundup(T x) {
     --x, x|=x>>1, x|=x>>2, x|=x>>4;
-    if constexpr(sizeof(T) > 1) x|=x>>8;
-    if constexpr(sizeof(T) > 2) x|=x>>16;
-    if constexpr(sizeof(T) > 4) x|=x>>32;
+    CIRC_CONSTIF(sizeof(T) > 1) x|=x>>8;
+    CIRC_CONSTIF(sizeof(T) > 2) x|=x>>16;
+    CIRC_CONSTIF(sizeof(T) > 4) x|=x>>32;
     return ++x;
 }
 
@@ -270,11 +276,7 @@ public:
         return ret;
     }
     void clear() {
-#if __cplusplus < 201703L
-        if(std::is_destructible<T>::value)
-#else
-        if constexpr(std::is_destructible_v<T>)
-#endif
+        CIRC_CONSTIF(std::is_destructible_v<T>)
             for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
         start_ = stop_ = 0;
     }
