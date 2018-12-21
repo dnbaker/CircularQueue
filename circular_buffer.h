@@ -276,7 +276,7 @@ public:
         return ret;
     }
     void clear() {
-        CIRC_CONSTIF(std::is_destructible_v<T>)
+        CIRC_CONSTIF(std::is_destructible<T>::value)
             for(size_type i(start_); i != stop_; data_[i++].~T(), i &= mask_);
         start_ = stop_ = 0;
     }
