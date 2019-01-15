@@ -27,7 +27,7 @@ static inline T roundup(T x) {
     --x, x|=x>>1, x|=x>>2, x|=x>>4;
     CIRC_CONSTIF(sizeof(T) > 1) x|=x>>8;
     CIRC_CONSTIF(sizeof(T) > 2) x|=x>>16;
-    CIRC_CONSTIF(sizeof(T) > 4) x|=x>>32;
+    CIRC_CONSTIF(sizeof(T) > 4) x|=x>>32; // Throws a warning on shift count. This is avoided in C++17, but is unavoidable in C++14 because of the lack of `if constexpr`.
     return ++x;
 }
 
