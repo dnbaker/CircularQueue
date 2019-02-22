@@ -171,7 +171,7 @@ public:
     auto start() const {return start_;}
     auto stop() const {return stop_;}
     auto mask() const {return mask_;}
-    const auto data() const {return data_;}
+    auto data() const {return data_;}
     auto data()             {return data_;}
     void resize(size_type new_size) {
         // TODO: this will cause a leak if the later malloc fails.
