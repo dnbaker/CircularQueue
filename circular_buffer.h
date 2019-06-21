@@ -28,7 +28,7 @@ static inline T roundup(T x) {
     // This also eliminates warnings from other attempts to generalize the approach.
     --x;
     unsigned i = 1;
-    do {x = x | (x >> i);} while((i <<= 1) < sizeof(T) * CHAR_BIT);
+    do {x |= (x >> i);} while((i <<= 1) < sizeof(T) * CHAR_BIT);
     return ++x;
 }
 
