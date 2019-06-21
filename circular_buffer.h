@@ -24,10 +24,11 @@ using std::uint8_t;
 
 template<typename T>
 static inline T roundup(T x) {
-    --x, x|=x>>1, x|=x>>2, x|=x>>4;
-    CIRC_CONSTIF(sizeof(T) > 1) x|=x>>8;
-    CIRC_CONSTIF(sizeof(T) > 2) x|=x>>16;
-    CIRC_CONSTIF(sizeof(T) > 4) x|=x>>32; // Throws a warning on shift count. This is avoided in C++17, but is unavoidable in C++14 because of the lack of `if constexpr`.
+    // With -O2 or higher, this full unrolls for all types
+    // This also eliminates warnings from other attempts to generalize the approach.
+    --x;
+    unsigned i = 1;
+    do {x = x | (x >> i);} while((i <<= 1) < sizeof(T) * CHAR_BIT);
     return ++x;
 }
 
