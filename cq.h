@@ -215,7 +215,7 @@ public:
     using size_type = SizeType;
     using iterator = circular_iterator<T, size_type>;
     using const_iterator = const_circular_iterator<T, size_type>;
-    deque(SizeType size):
+    deque(SizeType size=3):
             mask_(roundup(size + 1) - 1),
             start_(0), stop_(0),
             data_(static_cast<T *>(std::malloc((mask_ + 1) * sizeof(T))))
@@ -284,15 +284,6 @@ public:
             std::fprintf(stderr, "size before: %zu.\n", size());
             auto tmp = size();
             std::rotate(this->begin(), this->end(), iterator(*this, mask_));
-#if 0
-            auto tmp = static_cast<T *>(std::malloc((mask_ + 1) * sizeof(T)));
-            if(tmp == nullptr) throw std::bad_alloc();
-            std::memcpy(tmp, data_ + start_, ((mask_ + 1) - start_) * sizeof(T));
-            std::memcpy(tmp + ((mask_ + 1) - start_), data_, stop_ * sizeof(T));
-            auto sz = (stop_ - start_) & mask_;
-            std::memcpy(data_, tmp, sz);
-            std::free(tmp);
-#endif
             start_ = 0;
             stop_ = tmp;
             std::fprintf(stderr, "size after: %zu.\n", size());
@@ -405,7 +396,7 @@ public:
 }; // deque
 
 
-template<typename T, typename S>
+template<typename T, typename S=std::uint32_t>
 class FastCircularQueue: public deque<T, S> {
 public:
     template<typename...Args>
