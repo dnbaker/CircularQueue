@@ -267,7 +267,6 @@ public:
         if(tmp == nullptr) throw std::bad_alloc();
         data_ = static_cast<T *>(tmp);
         if(start_ == stop_) {
-            std::fprintf(stderr, "stop == start\n");
             if(start_) {
                 stop_ = mask_ + 1;
                 auto tmp = static_cast<T *>(std::malloc((stop_) * sizeof(T)));
@@ -279,16 +278,10 @@ public:
                 start_ = 0;
             }
         } else if(stop_ < start_) {
-            std::fprintf(stderr, "stop < start\n");
-            auto shift = start_;
-            std::fprintf(stderr, "size before: %zu.\n", size());
             auto tmp = size();
             std::rotate(this->begin(), this->end(), iterator(*this, mask_));
             start_ = 0;
             stop_ = tmp;
-            std::fprintf(stderr, "size after: %zu.\n", size());
-        } else {
-            std::fprintf(stderr, "stop > start\n");
         }
         mask_ = new_size - 1;
     }
@@ -296,9 +289,6 @@ public:
     template<typename... Args>
     T &push_back(Args &&... args) {
         if(__builtin_expect(((stop_ + 1) & mask_) == start_, 0)) {
-#if !NDEBUG
-            std::fprintf(stderr, "Resizing to new size of %zu\n", (size_t(mask_ + 1) << 1));
-#endif
             resize((mask_ + 1) << 1);
         }
         size_type ind = stop_;
@@ -308,9 +298,6 @@ public:
     template<typename... Args>
     T &push_front(Args &&... args) {
         if(((start_ - 1) & mask_) == stop_) {
-#if !NDEBUG
-            std::fprintf(stderr, "Resizing to new size of %zu\n", (size_t(mask_ + 1) << 1));
-#endif
             resize((mask_ + 1) << 1);
         }
         start_ = (start_ - 1) & mask_;
@@ -402,7 +389,7 @@ public:
     template<typename...Args>
     FastCircularQueue(Args &&...args): deque<T, S>(std::forward<Args>(args)...) {
         std::fprintf(stderr, "Warning: FastCircularQueue has been deprecated. Call as circ::deque instead.\n");
-    };
+    }
 };
 
 } // namespace circ
