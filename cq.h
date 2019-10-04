@@ -36,7 +36,7 @@ static inline T roundup(T x) {
 }
 
 template<typename T, typename SizeType=uint32_t>
-class FastCircularQueue {
+class deque {
     // A circular queue in which extra memory has been allocated up to a power of two.
     // This allows us to use bitmasks instead of modulus operations.
     // This circular queue is NOT threadsafe. Its purpose is creating a double-ended queue without
@@ -51,10 +51,10 @@ public:
     using size_type = SizeType;
     class iterator {
         // TODO: increment by an integral quantity.
-        FastCircularQueue &ref_;
+        deque &ref_;
         SizeType           pos_;
     public:
-        iterator(FastCircularQueue &ref, SizeType pos): ref_(ref), pos_(pos) {}
+        iterator(deque &ref, SizeType pos): ref_(ref), pos_(pos) {}
         iterator(const iterator &other): ref_(other.ref_), pos_(other.pos_) {}
         T &operator*() {
             return ref_.data_[pos_];
@@ -98,10 +98,10 @@ public:
         }
     };
     class const_iterator {
-        const FastCircularQueue &ref_;
+        const deque &ref_;
         SizeType                 pos_;
     public:
-        const_iterator(const FastCircularQueue &ref, SizeType pos): ref_(ref), pos_(pos) {}
+        const_iterator(const deque &ref, SizeType pos): ref_(ref), pos_(pos) {}
         const_iterator(const const_iterator &other): ref_(other.ref_), pos_(other.pos_) {}
         const T &operator*() const noexcept {
             return ref_.data_[pos_];
@@ -147,7 +147,7 @@ public:
     const_iterator cend()   const noexcept {
         return const_iterator(*this, stop_);
     }
-    FastCircularQueue(SizeType size):
+    deque(SizeType size):
             mask_(roundup(size + 1) - 1),
             start_(0), stop_(0),
             data_(static_cast<T *>(std::malloc((mask_ + 1) * sizeof(T))))
@@ -157,12 +157,12 @@ public:
             throw std::bad_alloc();
         }
     }
-    FastCircularQueue(FastCircularQueue &&other) {
+    deque(deque &&other) {
         if(&other == this) return;
         std::memcpy(this, &other, sizeof(*this));
         std::memset(&other, 0, sizeof(other));
     }
-    FastCircularQueue(const FastCircularQueue &other) {
+    deque(const deque &other) {
         if(&other == this) return;
         start_ = other.start_;
         stop_  = other.stop_;
@@ -271,7 +271,7 @@ public:
     void for_each(const Functor &func) {
         for(SizeType i = start_; i != stop_; func(data_[i++]), i &= mask_);
     }
-    ~FastCircularQueue() {this->free();}
+    ~deque() {this->free();}
     size_type capacity() const noexcept {return mask_;}
     size_type size()     const noexcept {return (stop_ - start_) & mask_;}
     std::vector<T> to_vector() const {
@@ -289,9 +289,7 @@ public:
         clear();
         std::free(data_);
     }
-}; // FastCircularQueue
-template<typename T, typename SizeType=std::size_t>
-using deque = FastCircularQueue<T, SizeType>;
+}; // deque
 
 } // namespace circ
 #endif /* #ifndef CIRCULAR_QUEUE_H__ */
