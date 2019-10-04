@@ -1,4 +1,6 @@
 #pragma once
+#ifndef CIRCULAR_QUEUE_H__
+#define CIRCULAR_QUEUE_H__
 #include <new>         // For placement new
 #include <cassert>     // For assert
 #include <cstdlib>     // For std::size_t
@@ -8,6 +10,7 @@
 #include <type_traits> // For std::enable_if_t/std::is_unsigned_v
 #include <cstring>     // For std::memcpy
 #include <vector>      // For converting to vector
+#include <climits>     // CHAR_BIT
 
 namespace circ {
 using std::size_t;
@@ -179,6 +182,7 @@ public:
         // Fix this by only copying the temporary buffer to data_ in case of success in all allocations.
         if(__builtin_expect(new_size < mask_, 0)) throw std::runtime_error("Attempting to resize to value smaller than queue's size, either from user error or overflowing the size_type. Abort!");
         new_size = roundup(new_size); // Is this necessary? We can hide resize from the user and then cut out this call.
+        new_size = std::max(size_type(4), new_size);
         auto tmp = std::realloc(data_, new_size * sizeof(T));
         if(tmp == nullptr) throw std::bad_alloc();
         data_ = static_cast<T *>(tmp);
@@ -204,7 +208,7 @@ public:
             start_ = 0;
             stop_ = sz;
         }
-        mask_ = ((mask_ + 1) << 1) - 1;
+        mask_ = new_size - 1;
     }
     // Does not yet implement push_front.
     template<typename... Args>
@@ -252,10 +256,10 @@ public:
         return push_back(std::forward<Args>(args)...); // Interface compatibility
     }
     T &back() {
-        return data_[stop_ - 1];
+        return data_[(stop_ - 1) & mask_];
     }
     const T &back() const {
-        return data_[stop_ - 1];
+        return data_[(stop_ - 1) & mask_];
     }
     T &front() {
         return data_[start_];
@@ -290,3 +294,4 @@ template<typename T, typename SizeType=std::size_t>
 using deque = FastCircularQueue<T, SizeType>;
 
 } // namespace circ
+#endif /* #ifndef CIRCULAR_QUEUE_H__ */
